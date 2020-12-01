@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "604716377233",
+    "firebase_url": "https://wundertolle-einkaufsliste.firebaseio.com",
+    "project_id": "wundertolle-einkaufsliste",
+    "storage_bucket": "wundertolle-einkaufsliste.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:604716377233:android:6c9693e0b0d964a9084b30",
+        "android_client_info": {
+          "package_name": "com.pl.wundertolle_einkaufsliste"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "604716377233-e0oec95iaodtq0r7gkr52jqeboq38i5v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDC-VBdGfDJcvNdp_iWRFa5X8Vu6q1qdbg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "604716377233-e0oec95iaodtq0r7gkr52jqeboq38i5v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
