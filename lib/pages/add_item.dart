@@ -88,7 +88,8 @@ class Widgets extends StatelessWidget {
               child: Text('Bestätigen'),
               onPressed: () {
                 Navigator.of(context).pop();
-                getItem();
+                Item item = getItem();
+                addItem(item);
               },
             ),
           ],
@@ -98,27 +99,25 @@ class Widgets extends StatelessWidget {
   }
 }
 
-void getItem(){
+Item getItem(){
   String name = AddItemDialog.nameController.text;
   String description = AddItemDialog.descriptionController.text;
   bool hasQuantity = AddItemDialog.hasQuantity;
   if (!hasQuantity){
     Item item = Item(name: name, description: description);
-    addItem(item);
+    return item;
   }else{
     int amount = AddItemDialog.quantityAmount;
     String amountName = AddItemDialog.quantityNameController.text;
     Item item = Item(name: name, description: description, hasQuantity: true, quantity: amount, quantityName: amountName);
-    addItem(item);
+    return item;
   }
 }
 
 void addItem(Item item){
   int listIndex = BarState.controller.index;
   ShoppingList list = Data.getLists()[listIndex];
-  list.addItem(item);
-  BarState.pages[list].state.notifyItemAdded(item);
-  FirestoreSaver().updateList(list);
+  FirestoreSaver().addItemToList(list, item);
 }
 
 class Quantity extends StatefulWidget{

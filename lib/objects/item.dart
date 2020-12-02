@@ -1,32 +1,26 @@
 
-class Item{
+import 'package:wundertolle_einkaufsliste/objects/database/savable.dart';
+
+class Item implements Savable{
   String name;
+  String id;
   String description;
   bool hasQuantity;
   int quantity;
   String quantityName;
   bool checked;
 
-  Item({this.name = '', this.description = '', this.hasQuantity = false, this.quantity = 0, this.quantityName = '', this.checked = false});
+  Item({this.name = 'Error', this.id, this.description = 'Error: Failed to load the data of this item!', this.hasQuantity = false, this.quantity = 0, this.quantityName = '', this.checked = false}){
+    if (this.id == null)
+      this.id = IDRandom().getSaltKeyID();
+  }
 
   @override
   String toString() {
     return this.name;
   }
 
-  factory Item.fromJson(Map<String, dynamic> json) {
-    String name = json['name'];
-    String description = json['description'];
-    bool hasQuantity = json['hasQuantity'];
-    int quantity = json['quantity'];
-    String quantityName = json['quantityName'];
-    if (description == null)
-      description = '';
-    if (hasQuantity == null)
-      hasQuantity = false;
-    return Item(name: name, description: description, hasQuantity: hasQuantity, quantityName: quantityName, quantity: quantity);
-  }
-
+  @override
   Map<String, dynamic> toJson() {
     Map<String, dynamic> out = {
       'name': this.name,
@@ -39,6 +33,20 @@ class Item{
         out['quantityName'] = this.quantityName;
     }
     return out;
+  }
+
+  @override
+  Item fromJson(Map<String, dynamic> json) {
+    String name = json['name'];
+    String description = json['description'];
+    bool hasQuantity = json['hasQuantity'];
+    int quantity = json['quantity'];
+    String quantityName = json['quantityName'];
+    if (description == null)
+      description = '';
+    if (hasQuantity == null)
+      hasQuantity = false;
+    return Item(name: name, description: description, hasQuantity: hasQuantity, quantityName: quantityName, quantity: quantity);
   }
 
 }

@@ -13,7 +13,7 @@ class Data {
   static void updateList(ShoppingList list) {
     ShoppingList preList = getListByID(list.id);
     if (preList != null)
-      preList.withItems(list.items());
+      preList.setItems(list.items);
     else {
       Data.addList(list);
     }

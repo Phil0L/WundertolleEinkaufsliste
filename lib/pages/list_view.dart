@@ -51,18 +51,19 @@ class ItemListState extends State<ItemList> {
     items.clear();
     Widget listW = Container(
       child: ListView.builder(
-        key: Key(list.items().length.toString()),
+        key: Key(list.items.length.toString()),
         padding: EdgeInsets.zero,
         cacheExtent: 100,
-        itemCount: list.items().length,
+        itemCount: list.items.length,
         itemBuilder: (BuildContext context, int index) {
-          Item item = list.items()[index];
+          Item item = list.items[index];
           ListItemWidget widget = ListItemWidget(item,
             index: index,
             deleteCallback: () {
               print('deleting $item at $index');
-              list.deleteItemByIndex(index);
-              FirestoreSaver().updateList(list, callback: () =>
+              list.deleteItemAt(index);
+              //TODO: extra method for removing in item at best
+              FirestoreSaver().addItemToList(list, item, callback: () =>
                   notifyListChanged()
               );
             },

@@ -1,16 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:wundertolle_einkaufsliste/objects/list.dart';
-import 'package:wundertolle_einkaufsliste/objects/savable/save_list.dart';
 import 'package:wundertolle_einkaufsliste/pages/home.dart';
 
 import '../data.dart';
+import '../item.dart';
 
 void initializeDatabase() {
   FireStoreLoader((firestore) {
     FireStoreGetter().getCollection(callback: ((snapshot) {
       snapshot.forEach((listSnapshot) {
-        ShoppingList list = ListParser.parse(listSnapshot.data());
+        ShoppingList list = ShoppingList().fromJson(listSnapshot.data());
         Data.addList(list);
       });
       startListener();
@@ -23,7 +23,7 @@ void startListener(){
     List<String> ids = [];
     Data.getLists().forEach((element) => ids.add(element.id));
     snapshot.docs.forEach((listSnapshot) {
-      ShoppingList list = ListParser.parse(listSnapshot.data());
+      ShoppingList list = ShoppingList().fromJson(listSnapshot.data());
       Data.updateList(list);
       if (ids.contains(list.id))
         ids.remove(list.id);
@@ -96,16 +96,27 @@ class FirestoreSaver {
 
   void saveList(ShoppingList list) {
     CollectionReference collectionReference = firestore.collection('lists');
-    DocumentReference documentReference = collectionReference.doc(list.name);
-    documentReference.set(ShoppingListSavable().withShoppingList(list).toJson(),
+    DocumentReference documentReference = collectionReference.doc(list.id);
+    documentReference.set(list.toJson(),
         SetOptions(merge: true));
   }
 
+  @deprecated
   void updateList(ShoppingList list, {Function callback}) {
     CollectionReference collectionReference = firestore.collection('lists');
-    DocumentReference documentReference = collectionReference.doc(list.name);
+    DocumentReference documentReference = collectionReference.doc(list.id);
     documentReference
-        .update(ShoppingListSavable().withShoppingList(list).toJson())
+        .update(list.toJson())
+        .then((value) => callback.call());
+  }
+
+  void addItemToList(ShoppingList list, Item item, {Function callback}){
+    CollectionReference collectionReference = firestore.collection('lists');
+    DocumentReference documentReference = collectionReference.doc(list.id);
+    ShoppingList newList = list.clone();
+    newList.addItem(item);
+    documentReference
+        .update(list.toJson())
         .then((value) => callback.call());
   }
 
@@ -147,7 +158,7 @@ class FirestoreDeleter {
   }
 
   void deleteList(ShoppingList list){
-    firestore.collection('lists').doc(list.name).delete();
+    firestore.collection('lists').doc(list.id).delete();
   }
   
 }

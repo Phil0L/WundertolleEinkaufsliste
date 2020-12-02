@@ -42,7 +42,7 @@ class AddDialog extends StatelessWidget {
 
 void confirmed(String name, {IconData icon}) {
   print('Adding list $name');
-  ShoppingList list = ShoppingList(name, icon: icon);
+  ShoppingList list = ShoppingListBuilder(name: name, icon: icon.codePoint).build();
   Data.addList(list);
   FirestoreSaver().saveList(list);
 }
