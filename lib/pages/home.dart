@@ -13,119 +13,117 @@ class Home extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Bar(),
+      home: MainPage(),
     );
   }
 }
 
-class Bar extends StatefulWidget {
-  static BarState state;
+class MainPage extends StatefulWidget {
+  static MainPageState state;
 
   @override
   State<StatefulWidget> createState() {
-    state = BarState(Data.getLists());
+    state = MainPageState(Data.lists);
     return state;
   }
 }
 
-class BarState extends State<Bar> with TickerProviderStateMixin {
+class MainPageState extends State<MainPage> with TickerProviderStateMixin {
+  MainPageState(this.lists);
+
+  // data
   final List<ShoppingList> lists;
-  static TabController controller;
-  static final OptionsMenu threeDot = OptionsMenu(key: UniqueKey(),);
+  final Map<ShoppingList, ItemList> pages = {};
 
-  static final Map<ShoppingList, ItemList> pages = {};
+  // menus
+  static final OptionsMenu dropdown = OptionsMenu(key: UniqueKey());
+  static final Appreciation appreciation = Appreciation();
 
-  VoidCallback swipeListener = () {
-    print('changing from ' + controller.previousIndex.toString() + " to " + controller.index.toString());
-    if (controller.index == controller.length -1) {
+  //controller
+  static TabController tabController;
+  static bool isInNewListTab;
+  final VoidCallback fabController = () {
+    double position = tabController.animation.value;
+    int border = tabController.length - 2;
+    bool newIsInNewTab = (position > border);
+    if (newIsInNewTab == isInNewListTab) return;
+    if (position > border) {
       FloatActionButton.state.hide();
-      threeDot.state.updateItems(hasDeleteList: false);
-    }
-    if (controller.previousIndex == controller.length -1 || controller.index != controller.length -1) {
+      dropdown.state.updateItems(hasDeleteList: false);
+    } else {
       FloatActionButton.state.show();
-      threeDot.state.updateItems(hasDeleteList: true);
+      dropdown.state.updateItems(hasDeleteList: true);
     }
+    isInNewListTab = newIsInNewTab;
   };
 
-  static bool crossedBorder;
-  VoidCallback swipeAnimationListener = () {
-    double position = controller.animation.value;
-    int border = controller.length -2;
-    bool newCrossedBorder = (position > border);
-    if (newCrossedBorder == crossedBorder)
-      return;
-    if (position > border){
-      FloatActionButton.state.hide();
-      threeDot.state.updateItems(hasDeleteList: false);
-    }
-    else {
-      FloatActionButton.state.show();
-      threeDot.state.updateItems(hasDeleteList: true);
-    }
-    crossedBorder = newCrossedBorder;
-  };
-
-  BarState(this.lists);
-
-  void notify() {
-    int index = controller.index;
-    int length = controller.length;
-    controller = TabController(length: lists.length + 1, vsync: this);
-    controller.addListener(swipeListener);
-    controller.animation.addListener(swipeAnimationListener);
-    setState(() {
-      if (index == length)
-        controller.animateTo(controller.length - 1);
-      else
-        controller.animateTo(index);
-    });
+  void reloadTabs() {
+    if (mounted)
+      setState(() {
+        int index = tabController.index;
+        int length = tabController.length;
+        tabController = TabController(length: lists.length + 1, vsync: this);
+        tabController.animation.addListener(fabController);
+        if (length > tabController.length) {
+          if (index == length - 1)
+            tabController.animateTo(tabController.length - 1);
+          else
+            tabController.animateTo(index - 1 > 0 ? index - 1 : 0);
+        } else if (length < tabController.length) {
+          if (index == length - 1)
+            tabController.animateTo(tabController.length - 1);
+          else
+            tabController.animateTo(index);
+        } else {
+          tabController.animateTo(index);
+        }
+      });
   }
 
   @override
   void initState() {
-    controller = TabController(length: lists.length + 1, vsync: this);
-    controller.addListener(swipeListener);
-    controller.animation.addListener(swipeAnimationListener);
+    tabController = TabController(length: lists.length + 1, vsync: this);
+    tabController.animation.addListener(fabController);
     super.initState();
   }
 
   @override
   void dispose() {
-    controller.dispose();
+    tabController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: Key(controller.length.toString()),
+      key: Key(tabController.length.toString()),
       appBar: AppBar(
         title: Text(app_name),
         backgroundColor: Colors.deepOrange[700],
         actions: [
-          Appreciation(),
-          threeDot,
+          appreciation,
+          dropdown,
         ],
         bottom: TabBar(
-          key: Key(controller.length.toString()),
-          controller: controller,
+          key: Key(tabController.length.toString()),
+          controller: tabController,
           isScrollable: true,
           indicatorColor: Colors.green[800],
-          tabs: buildTabBarContent(),
+          tabs: _buildTabBarContent(),
           onTap: ((int position) =>
-            tabClicked(position, from: controller.previousIndex)),
+              _tabClicked(position, from: tabController.previousIndex)),
         ),
       ),
       body: TabBarView(
-        key: Key(controller.length.toString()),
-        controller: controller,
-        children: buildTabBarViewContent(),
+        key: Key(tabController.length.toString()),
+        controller: tabController,
+        children: _buildTabBarViewContent(),
       ),
       floatingActionButton: FloatActionButton(),
     );
   }
 
-  List<Tab> buildTabBarContent() {
+  List<Tab> _buildTabBarContent() {
     final List<Tab> list = lists.map((ShoppingList list) {
       if (list.icon != null)
         return Tab(
@@ -152,27 +150,25 @@ class BarState extends State<Bar> with TickerProviderStateMixin {
     return list;
   }
 
-  List<Widget> buildTabBarViewContent() {
+  List<Widget> _buildTabBarViewContent() {
     final List<Widget> list = lists.map((ShoppingList list) {
       ItemList view = ItemList(list);
-      if (view.state != null || pages[list] == null)
-        pages[list] = view;
+      if (view.state != null || pages[list] == null) pages[list] = view;
       return view;
     }).toList();
-    list.add(ItemList(null, callback: addList));
+    list.add(ItemList(null, onTabClickedCallback: _addListClicked));
     return list;
   }
 
-  void tabClicked(int position, {int from}) {
-    print('switched tab from $from to $position');
+  void _tabClicked(int position, {int from}) {
     int tabLength = lists.length;
     if (position == tabLength) {
-      addList();
-      controller.animateTo(from);
+      _addListClicked();
+      tabController.animateTo(from);
     }
   }
 
-  void addList() {
+  void _addListClicked() {
     print('opening dialog');
     showDialog(
         context: context,
@@ -199,14 +195,14 @@ class FloatActionButton extends StatefulWidget {
 class FloatActionButtonState extends State<FloatActionButton> {
   bool visible;
 
-  void show(){
+  void show() {
     if (mounted)
       setState(() {
         visible = true;
       });
   }
 
-  void hide(){
+  void hide() {
     if (mounted)
       setState(() {
         visible = false;
@@ -221,7 +217,10 @@ class FloatActionButtonState extends State<FloatActionButton> {
       return FloatingActionButton(
         onPressed: () => addItem(),
         backgroundColor: Colors.deepOrange[700],
-        child: Icon(Icons.add, size: 30,),
+        child: Icon(
+          Icons.add,
+          size: 30,
+        ),
       );
     else
       return SizedBox();

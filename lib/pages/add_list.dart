@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:wundertolle_einkaufsliste/objects/data.dart';
 import 'package:wundertolle_einkaufsliste/objects/database/firestore.dart';
 import 'package:wundertolle_einkaufsliste/objects/list.dart';
 
-List<_Icon> icons = <_Icon>[
-  _Icon(Icons.shopping_cart_outlined),
-  _Icon(Icons.assignment_outlined),
-  _Icon(Icons.attach_money),
-  _Icon(Icons.home),
-  _Icon(Icons.fastfood),
-  _Icon(Icons.check_box_outlined),
-  _Icon(Icons.directions_car),
-  _Icon(Icons.book_outlined),
+List<SelectableIcon> icons = <SelectableIcon>[
+  SelectableIcon(Icons.shopping_cart_outlined),
+  SelectableIcon(Icons.assignment_outlined),
+  SelectableIcon(Icons.attach_money),
+  SelectableIcon(Icons.home),
+  SelectableIcon(Icons.fastfood),
+  SelectableIcon(Icons.check_box_outlined),
+  SelectableIcon(Icons.directions_car),
+  SelectableIcon(Icons.book_outlined),
 ];
 
 class AddDialog extends StatelessWidget {
@@ -32,7 +31,7 @@ class AddDialog extends StatelessWidget {
         child: Wrap(children: [
           Padding(
             padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-            child: Widgets(),
+            child: DialogContent(),
           ),
         ]),
       ),
@@ -41,14 +40,13 @@ class AddDialog extends StatelessWidget {
 }
 
 void confirmed(String name, {IconData icon}) {
-  print('Adding list $name');
-  ShoppingList list = ShoppingListBuilder(name: name, icon: icon.codePoint).build();
-  Data.addList(list);
-  FirestoreSaver().saveList(list);
+  print('Adding list $name to database');
+  ShoppingList list = ShoppingListBuilder(name: name, icon: (icon == null ? null : icon.codePoint)).build();
+  FirestoreSaver().addList(list);
 }
 
-class Widgets extends StatelessWidget {
-  Widgets({
+class DialogContent extends StatelessWidget {
+  DialogContent({
     Key key,
   }) : super(key: key);
 
@@ -100,12 +98,12 @@ class Widgets extends StatelessWidget {
 }
 
 // ignore: must_be_immutable
-class _Icon extends StatefulWidget {
-  static List<_Icon> icons = <_Icon>[];
+class SelectableIcon extends StatefulWidget {
+  static List<SelectableIcon> icons = <SelectableIcon>[];
   final IconData icon;
   int id;
 
-  _Icon(
+  SelectableIcon(
     this.icon, {
     Key key,
   }) : super(key: key) {
@@ -114,15 +112,15 @@ class _Icon extends StatefulWidget {
   }
 
   @override
-  State<StatefulWidget> createState() => _IconState(icon);
+  State<StatefulWidget> createState() => SelectableIconState(icon);
 }
 
-class _IconState extends State<_Icon> {
-  static _IconState currentActive;
+class SelectableIconState extends State<SelectableIcon> {
+  static SelectableIconState currentActive;
   bool _selected = false;
   final IconData icon;
 
-  _IconState(this.icon);
+  SelectableIconState(this.icon);
 
   void select() {
     setState(() {
@@ -147,7 +145,6 @@ class _IconState extends State<_Icon> {
       child: InkWell(
         splashColor: Colors.white.withAlpha(30),
         onTap: () {
-          print('tapped, was selected: $_selected');
           if (_selected) {
             deselect();
             currentActive = null;

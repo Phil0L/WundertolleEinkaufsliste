@@ -6,6 +6,8 @@ abstract class Savable<T>{
 
   Map<String, dynamic> toJson();
 
+  String toJsonString();
+
 }
 
 class IDRandom{

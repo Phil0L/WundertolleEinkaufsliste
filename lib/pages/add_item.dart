@@ -34,7 +34,7 @@ class AddItemDialog extends StatelessWidget{
         child: Wrap(children: [
           Padding(
             padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-            child: Widgets(),
+            child: DialogContent(),
           ),
         ]),
       ),
@@ -43,8 +43,8 @@ class AddItemDialog extends StatelessWidget{
 
 }
 
-class Widgets extends StatelessWidget {
-  Widgets({
+class DialogContent extends StatelessWidget {
+  DialogContent({
     Key key,
   }) : super(key: key);
 
@@ -88,8 +88,7 @@ class Widgets extends StatelessWidget {
               child: Text('Bestätigen'),
               onPressed: () {
                 Navigator.of(context).pop();
-                Item item = getItem();
-                addItem(item);
+                confirmed();
               },
             ),
           ],
@@ -99,7 +98,12 @@ class Widgets extends StatelessWidget {
   }
 }
 
-Item getItem(){
+void confirmed(){
+  Item item = readItem();
+  addItem(item);
+}
+
+Item readItem(){
   String name = AddItemDialog.nameController.text;
   String description = AddItemDialog.descriptionController.text;
   bool hasQuantity = AddItemDialog.hasQuantity;
@@ -115,8 +119,9 @@ Item getItem(){
 }
 
 void addItem(Item item){
-  int listIndex = BarState.controller.index;
-  ShoppingList list = Data.getLists()[listIndex];
+  //TODO: kinda edgy
+  int listIndex = MainPageState.tabController.index;
+  ShoppingList list = Data.lists[listIndex];
   FirestoreSaver().addItemToList(list, item);
 }
 
@@ -149,70 +154,74 @@ class QuantityState extends State<Quantity>{
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              child: Checkbox(
-                value: active,
-                onChanged: (checked) {
-                  if (checked)
-                    activateQuantity();
-                  else
-                    deactivateQuantity();
-                },
-              ),
-            ),
-            Text('Mit Menge')
-          ],
-        ),
-        getContent(active),
+        generalLayout(),
+        amountLayout(active),
       ],
     );
   }
 
-}
-
-Widget getContent(bool active){
-  if (active)
+  Widget generalLayout(){
     return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        SizedBox(
-          width: 120,
-          child: SpinBox(
-            direction: Axis.horizontal,
-            min: 0,
-            max: 1000,
-            step: 1,
-            value: AddItemDialog.quantityAmount.toDouble(),
-            spacing: 0,
-            decoration: InputDecoration(
-                border: InputBorder.none
-            ),
-            onChanged: ((amount) {
-              AddItemDialog.quantityAmount = amount.toInt();
-              print(amount);
-            }),
+        Container(
+          width: 50,
+          height: 50,
+          child: Checkbox(
+            value: active,
+            onChanged: (checked) {
+              if (checked)
+                activateQuantity();
+              else
+                deactivateQuantity();
+            },
           ),
         ),
-        SizedBox(
-          width: 80,
-          child: TextField(
-            controller: AddItemDialog.quantityNameController,
-            textAlign: TextAlign.start,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              hintText: 'Menge',
-              fillColor: Colors.grey[500],
-            ),
-          ),
-        )
+        Text('Mit Menge')
       ],
     );
-  else
-    return SizedBox(
-      height: 0,
-    );
+  }
+
+  Widget amountLayout(bool active){
+    if (active)
+      return Row(
+        children: [
+          SizedBox(
+            width: 120,
+            child: SpinBox(
+              direction: Axis.horizontal,
+              min: 0,
+              max: 1000,
+              step: 1,
+              value: AddItemDialog.quantityAmount.toDouble(),
+              spacing: 0,
+              decoration: InputDecoration(
+                  border: InputBorder.none
+              ),
+              onChanged: ((amount) {
+                AddItemDialog.quantityAmount = amount.toInt();
+              }),
+            ),
+          ),
+          SizedBox(
+            width: 80,
+            child: TextField(
+              controller: AddItemDialog.quantityNameController,
+              textAlign: TextAlign.start,
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: 'Menge',
+                fillColor: Colors.grey[500],
+              ),
+            ),
+          )
+        ],
+      );
+    else
+      return SizedBox(
+        height: 0,
+      );
+  }
+
 }
+

@@ -1,7 +1,9 @@
 
+import 'dart:convert';
+
 import 'package:wundertolle_einkaufsliste/objects/database/savable.dart';
 
-class Item implements Savable{
+class Item implements Savable, ItemUpdater{
   String name;
   String id;
   String description;
@@ -36,6 +38,11 @@ class Item implements Savable{
   }
 
   @override
+  String toJsonString(){
+    return json.encode(toJson());
+  }
+
+  @override
   Item fromJson(Map<String, dynamic> json) {
     String name = json['name'];
     String description = json['description'];
@@ -48,5 +55,37 @@ class Item implements Savable{
       hasQuantity = false;
     return Item(name: name, description: description, hasQuantity: hasQuantity, quantityName: quantityName, quantity: quantity);
   }
+
+  @override
+  void onCreate() {
+
+  }
+
+  @override
+  void onDelete() {
+
+  }
+
+  @override
+  void onModify(Item newItem) {
+
+  }
+
+  @override
+  void onUpdate(Item newItem) {
+
+  }
+
+}
+
+abstract class ItemUpdater{
+
+  void onUpdate(Item newItem);
+
+  void onCreate();
+
+  void onDelete();
+
+  void onModify(Item newItem);
 
 }

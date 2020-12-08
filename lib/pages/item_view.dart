@@ -26,7 +26,6 @@ class ListItemWidgetState extends State<ListItemWidget> {
 
   @override
   Widget build(BuildContext context) {
-    //print('rebuilding item ' + item.name);
     return Container(
       alignment: Alignment.center,
       margin: EdgeInsets.only(left: 5, right: 5),

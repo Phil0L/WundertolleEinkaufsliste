@@ -8,9 +8,7 @@ import 'package:wundertolle_einkaufsliste/pages/home.dart';
 class OptionsMenu extends StatefulWidget {
   OptionsMenuState state;
 
-  OptionsMenu({
-    Key key,
-  }) : super(key: key);
+  OptionsMenu({Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -38,24 +36,26 @@ class OptionsMenuState extends State<OptionsMenu> {
       itemBuilder: (context) {
         List<PopupMenuEntry<dynamic>> out = [];
         if (hasDeleteList)
-          out.add(PopupMenuItem(
-            child: Text('Liste löschen'),
-            value: OptionItems.DELETE_LIST,
-          ));
+          out.add(
+            PopupMenuItem(
+              child: Text('Liste löschen'),
+              value: OptionItems.DELETE_LIST,
+            ),
+          );
         return out;
       },
       onSelected: (value) {
-        if (value == OptionItems.DELETE_LIST) {
-          int index = BarState.controller.index;
-          ShoppingList list = Data.getLists()[index];
-          FirestoreDeleter().deleteList(list);
+        switch (value){
+          case OptionItems.DELETE_LIST:
+            int index = MainPageState.tabController.index;
+            ShoppingList list = Data.lists[index];
+            FirestoreDeleter().deleteList(list);
+            break;
         }
       },
     );
   }
 }
-
-
 
 class OptionsItem extends StatelessWidget {
   const OptionsItem({
@@ -75,28 +75,27 @@ class OptionsItem extends StatelessWidget {
   }
 }
 
-class Appreciation extends StatelessWidget{
+class Appreciation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         FireStoreGetter().getDocument(
-            documentReference: FireStoreLoader.firestore.collection('likes').doc('likes'),
+            documentReference:
+                FireStoreLoader.firestore.collection('likes').doc('likes'),
             callback: (snapshot) {
               int likes = snapshot.data()['likes'];
               likes += 1;
               Scaffold.of(context).hideCurrentSnackBar();
-              Scaffold.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text('The app has been appreciated ' + likes.toString() + ' times!'),
-                  )
-              );
+              Scaffold.of(context).showSnackBar(SnackBar(
+                content: Text('The app has been appreciated ' +
+                    likes.toString() +
+                    ' times!'),
+              ));
               FirestoreSaver().saveLikes(likes);
-            }
-        );
+            });
       },
       child: Icon(Icons.favorite),
     );
   }
-  
 }

@@ -11,29 +11,29 @@ void initializeDatabase() {
     FireStoreGetter().getCollection(callback: ((snapshot) {
       snapshot.forEach((listSnapshot) {
         ShoppingList list = ShoppingList().fromJson(listSnapshot.data());
-        Data.addList(list);
+        Data.onListAdded(list);
       });
       startListener();
     }));
   });
 }
 
-void startListener(){
+void startListener() {
   FirestoreListener().listenForChange((snapshot) {
-    List<String> ids = [];
-    Data.getLists().forEach((element) => ids.add(element.id));
+    Data.onUpdate();
+    List<ShoppingList> existingLists = List.from(Data.lists);
     snapshot.docs.forEach((listSnapshot) {
       ShoppingList list = ShoppingList().fromJson(listSnapshot.data());
-      Data.updateList(list);
-      if (ids.contains(list.id))
-        ids.remove(list.id);
+      if (existingLists.contains(list)) {
+        Data.onListUpdate(list, existingLists.firstWhere((element) => element.id == list.id, orElse: null));
+        existingLists.remove(list);
+      } else
+        // List is born!
+        Data.onListAdded(list);
     });
-    if (ids.isNotEmpty)
-      ids.forEach((element) => Data.removeListByID(element));
-    BarState.pages.forEach((list, view) {
-      if (view.state != null)
-        view.state.notifyListChanged();
-    });
+    if (existingLists.isNotEmpty)
+      // List has died!
+      existingLists.forEach((element) => Data.onListRemoved(element));
   });
 }
 
@@ -94,35 +94,44 @@ class FirestoreSaver {
     if (firestore == null) firestore = FireStoreLoader.firestore;
   }
 
-  void saveList(ShoppingList list) {
+  void addList(ShoppingList list) {
     CollectionReference collectionReference = firestore.collection('lists');
     DocumentReference documentReference = collectionReference.doc(list.id);
-    documentReference.set(list.toJson(),
-        SetOptions(merge: true));
+    documentReference.set(list.toJson(), SetOptions(merge: true));
   }
 
   @deprecated
   void updateList(ShoppingList list, {Function callback}) {
     CollectionReference collectionReference = firestore.collection('lists');
     DocumentReference documentReference = collectionReference.doc(list.id);
-    documentReference
-        .update(list.toJson())
-        .then((value) => callback.call());
+    documentReference.update(list.toJson()).then((value) => callback.call());
   }
 
-  void addItemToList(ShoppingList list, Item item, {Function callback}){
+  void addItemToList(ShoppingList list, Item item, {Function callback}) {
     CollectionReference collectionReference = firestore.collection('lists');
     DocumentReference documentReference = collectionReference.doc(list.id);
     ShoppingList newList = list.clone();
-    newList.addItem(item);
-    documentReference
-        .update(list.toJson())
-        .then((value) => callback.call());
+    print(list);
+    print(newList);
+    newList.modify.addItem(item);
+    documentReference.update(newList.toJson()).then((value) {
+      if (callback != null) callback.call();
+    });
   }
 
-  void saveLikes(int likes){
+  void removeItemFromList(ShoppingList list, Item item, {Function callback}) {
+    CollectionReference collectionReference = firestore.collection('lists');
+    DocumentReference documentReference = collectionReference.doc(list.id);
+    ShoppingList newList = list.clone();
+    newList.modify.removeItem(item);
+    documentReference.update(newList.toJson()).then((value) {
+      if (callback != null) callback.call();
+    });
+  }
+
+  void saveLikes(int likes) {
     DocumentReference doc = firestore.collection('likes').doc('likes');
-    doc.update({'likes': likes });
+    doc.update({'likes': likes});
   }
 }
 
@@ -138,7 +147,7 @@ class FirestoreListener {
         .collection('lists')
         .snapshots(includeMetadataChanges: true)
         .listen((event) {
-      print('database change detected!');
+      print('Database change detected!');
       callback.call(event);
     }, onError: ((error, stacktrace) {
       print('database error!');
@@ -157,8 +166,7 @@ class FirestoreDeleter {
     if (firestore == null) firestore = FireStoreLoader.firestore;
   }
 
-  void deleteList(ShoppingList list){
+  void deleteList(ShoppingList list) {
     firestore.collection('lists').doc(list.id).delete();
   }
-  
 }

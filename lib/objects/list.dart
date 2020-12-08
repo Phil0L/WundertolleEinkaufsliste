@@ -1,9 +1,10 @@
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:wundertolle_einkaufsliste/objects/database/savable.dart';
 import 'package:wundertolle_einkaufsliste/objects/item.dart';
 
-class ShoppingList implements Savable<ShoppingList> {
+class ShoppingList implements Savable<ShoppingList>, ShoppingListUpdater {
   String _name;
   String _id;
   int _icon;
@@ -21,21 +22,39 @@ class ShoppingList implements Savable<ShoppingList> {
 
   int get iconData => _icon;
 
-  IconData get icon => IconData(_icon, fontFamily: 'MaterialIcons');
+  IconData get icon{
+    if (_icon != null) return IconData(_icon, fontFamily: 'MaterialIcons');
+    return null;
+  }
 
-  void addItem(Item item) => _items.add(item);
+  ListModifier get modify => ListModifier(this);
 
-  void addItems(List<Item> items) => _items.addAll(items);
+  @override
+  void onUpdate() {}
 
-  void setItems(List<Item> items) => _items = items;
+  @override
+  void onCreate() {}
 
-  void deleteItem(Item item) => _items.remove(item);
+  @override
+  void onDelete() {}
 
-  void deleteItemAt(int index) => _items.removeAt(index);
+  @override
+  void onItemAdded(Item item) {}
+
+  @override
+  void onItemModified(Item item) {}
+
+  @override
+  void onItemRemoved(Item item) {}
 
   @override
   String toString() {
-    return this.name;
+    return this._name +
+        ":[id:" +
+        this._id +
+        ", size:" +
+        this._items.length.toString() +
+        "]";
   }
 
   @override
@@ -48,7 +67,7 @@ class ShoppingList implements Savable<ShoppingList> {
   }
 
   ShoppingList clone() {
-    return ShoppingListBuilder(name: name, icon: _icon, id: id, items: _items)
+    return ShoppingListBuilder(name: name, icon: _icon, id: id, items: List.from(_items).cast<Item>().toList())
         .build();
   }
 
@@ -62,7 +81,9 @@ class ShoppingList implements Savable<ShoppingList> {
     items.values.forEach((itemJson) {
       itemsList.add(Item().fromJson(itemJson));
     });
-    return ShoppingListBuilder(name: name, id: id, icon: iconCodePoint, items: itemsList).build();
+    return ShoppingListBuilder(
+            name: name, id: id, icon: iconCodePoint, items: itemsList)
+        .build();
   }
 
   @override
@@ -78,6 +99,13 @@ class ShoppingList implements Savable<ShoppingList> {
     out['items'] = items;
     return out;
   }
+
+  @override
+  String toJsonString(){
+    return json.encode(toJson());
+  }
+
+
 }
 
 class ShoppingListBuilder {
@@ -87,8 +115,11 @@ class ShoppingListBuilder {
   List<Item> _items;
 
   ShoppingListBuilder({@required String name, @required int icon, id, items}) {
-    id = IDRandom().getSaltKeyID();
-    if (items != null && items)
+    _name = name;
+    _icon = icon;
+    if (id == null) _id = IDRandom().getSaltKeyID();
+    else _id = id;
+    if (items != null)
       this._items = items;
     else
       this._items = [];
@@ -120,5 +151,37 @@ class ShoppingListBuilder {
 
   ShoppingList build() {
     return ShoppingList._(_name, _id, _icon, _items);
+  }
+}
+
+abstract class ShoppingListUpdater {
+  void onUpdate();
+
+  void onCreate();
+
+  void onDelete();
+
+  void onItemAdded(Item item);
+
+  void onItemRemoved(Item item);
+
+  void onItemModified(Item item);
+}
+
+class ListModifier {
+  final ShoppingList list;
+
+  ListModifier(this.list);
+
+  void addItem(Item item) {
+    list._items.add(item);
+  }
+
+  void removeItem(Item item) {
+    for (Item i in list._items) {
+      if (i.id == item.id) {
+        list._items.remove(i);
+      }
+    }
   }
 }

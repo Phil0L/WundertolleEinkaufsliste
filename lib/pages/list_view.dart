@@ -10,33 +10,29 @@ import 'item_view.dart';
 class ItemList extends StatefulWidget {
    ItemListState state;
   final ShoppingList list;
-  final Function callback;
+  final Function onTabClickedCallback;
 
-  ItemList(this.list, {this.callback});
+  ItemList(this.list, {this.onTabClickedCallback});
 
   @override
   State<StatefulWidget> createState() {
-    state = ItemListState(list, callback: callback);
+    state = ItemListState(list, onTabClickedCallback: onTabClickedCallback);
     return state;
   }
 }
 
 class ItemListState extends State<ItemList> {
   final ShoppingList list;
-  final Function callback;
-  List<ListItemWidget> items = [];
+  final Function onTabClickedCallback;
+  List<ListItemWidget> activeWidgets = [];
 
-  ItemListState(this.list, {this.callback});
+  ItemListState(this.list, {this.onTabClickedCallback});
 
-  void notifyItemAdded(Item item) {
-    if (mounted) setState(() {});
-  }
-
+  //TODO: hmmmmm, not like this!
   void notifyListChanged(){
-    print('updating list ' + list.name);
     if (mounted) {
       setState(() {});
-      items.forEach((element) {
+      activeWidgets.forEach((element) {
         if (element.state != null)
           element.state.setState(() {});
       });
@@ -46,9 +42,9 @@ class ItemListState extends State<ItemList> {
   @override
   Widget build(BuildContext context) {
     if (list == null) {
-      return AddListButton(callback: callback);
+      return AddListButton(callback: onTabClickedCallback);
     }
-    items.clear();
+    activeWidgets.clear();
     Widget listW = Container(
       child: ListView.builder(
         key: Key(list.items.length.toString()),
@@ -60,15 +56,10 @@ class ItemListState extends State<ItemList> {
           ListItemWidget widget = ListItemWidget(item,
             index: index,
             deleteCallback: () {
-              print('deleting $item at $index');
-              list.deleteItemAt(index);
-              //TODO: extra method for removing in item at best
-              FirestoreSaver().addItemToList(list, item, callback: () =>
-                  notifyListChanged()
-              );
+              FirestoreSaver().removeItemFromList(list, item);
             },
           );
-          items.add(widget);
+          activeWidgets.add(widget);
           return widget;
         },
       ),
