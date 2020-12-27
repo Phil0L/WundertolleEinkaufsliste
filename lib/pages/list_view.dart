@@ -8,7 +8,7 @@ import 'item_view.dart';
 
 // ignore: must_be_immutable
 class ItemList extends StatefulWidget {
-   ItemListState state;
+  ItemListState state;
   final ShoppingList list;
   final Function onTabClickedCallback;
 
@@ -24,19 +24,12 @@ class ItemList extends StatefulWidget {
 class ItemListState extends State<ItemList> {
   final ShoppingList list;
   final Function onTabClickedCallback;
-  List<ListItemWidget> activeWidgets = [];
+  Map<Item, ListItemWidget> widgets = {};
 
   ItemListState(this.list, {this.onTabClickedCallback});
 
-  //TODO: hmmmmm, not like this!
-  void notifyListChanged(){
-    if (mounted) {
-      setState(() {});
-      activeWidgets.forEach((element) {
-        if (element.state != null)
-          element.state.setState(() {});
-      });
-    }
+  void notifyListChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -44,7 +37,6 @@ class ItemListState extends State<ItemList> {
     if (list == null) {
       return AddListButton(callback: onTabClickedCallback);
     }
-    activeWidgets.clear();
     Widget listW = Container(
       child: ListView.builder(
         key: Key(list.items.length.toString()),
@@ -53,13 +45,15 @@ class ItemListState extends State<ItemList> {
         itemCount: list.items.length,
         itemBuilder: (BuildContext context, int index) {
           Item item = list.items[index];
-          ListItemWidget widget = ListItemWidget(item,
+          ListItemWidget widget = ListItemWidget(
+            item,
             index: index,
             deleteCallback: () {
               FirestoreSaver().removeItemFromList(list, item);
             },
           );
-          activeWidgets.add(widget);
+          if (widget.state != null || widgets[item] == null)
+            widgets[item] = widget;
           return widget;
         },
       ),

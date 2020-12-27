@@ -7,10 +7,17 @@ import 'package:wundertolle_einkaufsliste/objects/item.dart';
 import 'package:wundertolle_einkaufsliste/objects/list.dart';
 import 'package:wundertolle_einkaufsliste/pages/home.dart';
 
-class AddItemDialog extends StatelessWidget{
+class AddItemDialog extends StatelessWidget {
+  static final String nameText = "Name";
+  static final String descriptionText = "Beschreibung";
+  static final String useQuantityText = "Mit Menge";
+  static final String quantityNameText = "Einheit";
+
   static final TextEditingController nameController = TextEditingController();
-  static final TextEditingController descriptionController = TextEditingController();
-  static final TextEditingController quantityNameController = TextEditingController();
+  static final TextEditingController descriptionController =
+      TextEditingController();
+  static final TextEditingController quantityNameController =
+      TextEditingController();
   static int quantityAmount = 0;
   static bool hasQuantity = false;
 
@@ -40,7 +47,6 @@ class AddItemDialog extends StatelessWidget{
       ),
     );
   }
-
 }
 
 class DialogContent extends StatelessWidget {
@@ -61,7 +67,7 @@ class DialogContent extends StatelessWidget {
           textAlign: TextAlign.center,
           decoration: InputDecoration(
             border: InputBorder.none,
-            hintText: 'Listenname',
+            hintText: AddItemDialog.nameText,
             fillColor: Colors.grey[500],
           ),
         ),
@@ -71,7 +77,7 @@ class DialogContent extends StatelessWidget {
           textAlign: TextAlign.center,
           decoration: InputDecoration(
             border: InputBorder.none,
-            hintText: 'Listenbeschreibung',
+            hintText: AddItemDialog.descriptionText,
             fillColor: Colors.grey[500],
           ),
         ),
@@ -87,8 +93,7 @@ class DialogContent extends StatelessWidget {
             TextButton(
               child: Text('Bestätigen'),
               onPressed: () {
-                Navigator.of(context).pop();
-                confirmed();
+                if (confirmed()) Navigator.of(context).pop();
               },
             ),
           ],
@@ -98,52 +103,58 @@ class DialogContent extends StatelessWidget {
   }
 }
 
-void confirmed(){
+bool confirmed() {
   Item item = readItem();
+  if (item.name == '') return false;
   addItem(item);
+  return true;
 }
 
-Item readItem(){
+Item readItem() {
   String name = AddItemDialog.nameController.text;
   String description = AddItemDialog.descriptionController.text;
   bool hasQuantity = AddItemDialog.hasQuantity;
-  if (!hasQuantity){
+  if (!hasQuantity) {
     Item item = Item(name: name, description: description);
     return item;
-  }else{
+  } else {
     int amount = AddItemDialog.quantityAmount;
     String amountName = AddItemDialog.quantityNameController.text;
-    Item item = Item(name: name, description: description, hasQuantity: true, quantity: amount, quantityName: amountName);
+    Item item = Item(
+        name: name,
+        description: description,
+        hasQuantity: true,
+        quantity: amount,
+        quantityName: amountName);
     return item;
   }
 }
 
-void addItem(Item item){
+void addItem(Item item) {
   //TODO: kinda edgy
   int listIndex = MainPageState.tabController.index;
   ShoppingList list = Data.lists[listIndex];
   FirestoreSaver().addItemToList(list, item);
 }
 
-class Quantity extends StatefulWidget{
+class Quantity extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
     return QuantityState();
   }
-
 }
 
-class QuantityState extends State<Quantity>{
+class QuantityState extends State<Quantity> {
   bool active = false;
 
-  void activateQuantity(){
+  void activateQuantity() {
     setState(() {
       active = true;
       AddItemDialog.hasQuantity = true;
     });
   }
 
-  void deactivateQuantity(){
+  void deactivateQuantity() {
     setState(() {
       active = false;
       AddItemDialog.hasQuantity = false;
@@ -160,7 +171,7 @@ class QuantityState extends State<Quantity>{
     );
   }
 
-  Widget generalLayout(){
+  Widget generalLayout() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
@@ -177,12 +188,12 @@ class QuantityState extends State<Quantity>{
             },
           ),
         ),
-        Text('Mit Menge')
+        Text(AddItemDialog.useQuantityText)
       ],
     );
   }
 
-  Widget amountLayout(bool active){
+  Widget amountLayout(bool active) {
     if (active)
       return Row(
         children: [
@@ -195,9 +206,7 @@ class QuantityState extends State<Quantity>{
               step: 1,
               value: AddItemDialog.quantityAmount.toDouble(),
               spacing: 0,
-              decoration: InputDecoration(
-                  border: InputBorder.none
-              ),
+              decoration: InputDecoration(border: InputBorder.none),
               onChanged: ((amount) {
                 AddItemDialog.quantityAmount = amount.toInt();
               }),
@@ -210,7 +219,7 @@ class QuantityState extends State<Quantity>{
               textAlign: TextAlign.start,
               decoration: InputDecoration(
                 border: InputBorder.none,
-                hintText: 'Menge',
+                hintText: AddItemDialog.quantityNameText,
                 fillColor: Colors.grey[500],
               ),
             ),
@@ -222,6 +231,4 @@ class QuantityState extends State<Quantity>{
         height: 0,
       );
   }
-
 }
-

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wundertolle_einkaufsliste/objects/database/firestore.dart';
 import 'package:wundertolle_einkaufsliste/objects/item.dart';
 
 // ignore: must_be_immutable
@@ -12,7 +13,8 @@ class ListItemWidget extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    state = ListItemWidgetState(item, index: index, deleteCallback: deleteCallback);
+    state =
+        ListItemWidgetState(item, index: index, deleteCallback: deleteCallback);
     return state;
   }
 }
@@ -23,6 +25,18 @@ class ListItemWidgetState extends State<ListItemWidget> {
   final GestureTapCallback deleteCallback;
 
   ListItemWidgetState(this.item, {this.index, this.deleteCallback});
+
+  void notifyItemChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void onChecked(bool isNowChecked) {
+    setState(() {
+      Item ic = item.clone();
+      ic.checked = isNowChecked;
+      FirestoreSaver().updateItemInList(item.parent, ic);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,17 +59,19 @@ class ListItemWidgetState extends State<ListItemWidget> {
                 width: 50,
                 child: Checkbox(
                   value: item.checked,
-                  onChanged: (checked) {
-                    setState(() {
-                      this.item.checked = checked;
-                    });
-                  },
+                  onChanged: (checked) => onChecked(checked),
                 ),
               ),
               TextFields(item: item),
-              SizedBox(width: 10,),
+              SizedBox(
+                width: 10,
+              ),
               Quantity(item: item),
-              Delete(item: item, index: index, callback: deleteCallback,),
+              Delete(
+                item: item,
+                index: index,
+                callback: deleteCallback,
+              ),
             ],
           ),
         ),
@@ -65,10 +81,8 @@ class ListItemWidgetState extends State<ListItemWidget> {
 }
 
 class Delete extends StatelessWidget {
-  const Delete({
-    Key key,
-    @required this.item, this.index, this.callback
-  }) : super(key: key);
+  const Delete({Key key, @required this.item, this.index, this.callback})
+      : super(key: key);
 
   final Item item;
   final int index;
@@ -165,7 +179,9 @@ class Description extends StatelessWidget {
         maxLines: 3,
       );
     else
-      return SizedBox(height: 0,);
+      return SizedBox(
+        height: 0,
+      );
   }
 }
 

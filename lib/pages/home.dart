@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:wundertolle_einkaufsliste/objects/data.dart';
+import 'package:wundertolle_einkaufsliste/objects/item.dart';
 import 'package:wundertolle_einkaufsliste/objects/list.dart';
 import 'package:wundertolle_einkaufsliste/pages/add_item.dart';
 import 'package:wundertolle_einkaufsliste/pages/add_list.dart';
+import 'package:wundertolle_einkaufsliste/pages/item_view.dart';
 import 'package:wundertolle_einkaufsliste/pages/list_view.dart';
 import 'package:wundertolle_einkaufsliste/pages/options_menu.dart';
 
@@ -57,7 +59,7 @@ class MainPageState extends State<MainPage> with TickerProviderStateMixin {
     isInNewListTab = newIsInNewTab;
   };
 
-  void reloadTabs() {
+  void reloadTabList() {
     if (mounted)
       setState(() {
         int index = tabController.index;
@@ -78,6 +80,27 @@ class MainPageState extends State<MainPage> with TickerProviderStateMixin {
           tabController.animateTo(index);
         }
       });
+  }
+
+  void reloadTab(ShoppingList list){
+    ItemList itemList = pages[list];
+    if (itemList == null)
+      return;
+    itemList.state.notifyListChanged();
+    print("List: $list has been reloaded");
+  }
+
+  void reloadItemInTab(ShoppingList list, Item item){
+    ItemList itemList = pages[list];
+    if (itemList == null)
+      return;
+    Map<Item, ListItemWidget> widgets = itemList.state.widgets;
+    if (widgets == null)
+      return;
+    ListItemWidget widget = widgets[item];
+    if (widget == null)
+      return;
+    widget.state.notifyItemChanged();
   }
 
   @override

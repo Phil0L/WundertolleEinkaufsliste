@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wundertolle_einkaufsliste/objects/database/firestore.dart';
 import 'package:wundertolle_einkaufsliste/objects/list.dart';
+import 'package:wundertolle_einkaufsliste/objects/user.dart';
 
 List<SelectableIcon> icons = <SelectableIcon>[
   SelectableIcon(Icons.shopping_cart_outlined),
@@ -41,7 +42,7 @@ class AddDialog extends StatelessWidget {
 
 void confirmed(String name, {IconData icon}) {
   print('Adding list $name to database');
-  ShoppingList list = ShoppingListBuilder(name: name, icon: (icon == null ? null : icon.codePoint)).build();
+  ShoppingList list = ShoppingListBuilder(name: name, icon: (icon == null ? null : icon.codePoint), users: List.filled(1, User.me)).build();
   FirestoreSaver().addList(list);
 }
 

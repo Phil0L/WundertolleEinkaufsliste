@@ -27,6 +27,7 @@ dependencies:
   firebase_core: ^0.5.1
   cloud_firestore: ^0.14.2
   flutter_launcher_icons: ^0.8.1
+  device_info: ^1.0.0
 
 
   # The following adds the Cupertino Icons font to your application.

@@ -129,6 +129,16 @@ class FirestoreSaver {
     });
   }
 
+  void updateItemInList(ShoppingList list, Item newItem, {Function callback}){
+    CollectionReference collectionReference = firestore.collection('lists');
+    DocumentReference documentReference = collectionReference.doc(list.id);
+    ShoppingList newList = list.clone();
+    newList.modify.updateItem(newItem);
+    documentReference.update(newList.toJson()).then((value) {
+      if (callback != null) callback.call();
+    });
+  }
+
   void saveLikes(int likes) {
     DocumentReference doc = firestore.collection('likes').doc('likes');
     doc.update({'likes': likes});
