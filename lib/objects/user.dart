@@ -35,7 +35,7 @@ class User implements Savable{
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is User && runtimeType == other.runtimeType && uuid == other.uuid;
+      other is User && uuid == other.uuid;
 
   @override
   int get hashCode => uuid.hashCode;

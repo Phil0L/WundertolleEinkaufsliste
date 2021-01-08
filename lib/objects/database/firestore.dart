@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
 import 'package:wundertolle_einkaufsliste/objects/list.dart';
 import 'package:wundertolle_einkaufsliste/pages/home.dart';
 
@@ -67,6 +68,10 @@ class FireStoreGetter {
   FireStoreGetter() {
     if (firestore == null) firestore = FireStoreLoader.firestore;
   }
+  
+  void getListDocument(String listID, {Function(DocumentSnapshot) callback}){
+    firestore.collection('lists').doc(listID).get().then((value) => callback.call(value));
+  }
 
   void getDocument(
       {DocumentReference documentReference,
@@ -100,11 +105,10 @@ class FirestoreSaver {
     documentReference.set(list.toJson(), SetOptions(merge: true));
   }
 
-  @deprecated
   void updateList(ShoppingList list, {Function callback}) {
     CollectionReference collectionReference = firestore.collection('lists');
     DocumentReference documentReference = collectionReference.doc(list.id);
-    documentReference.update(list.toJson()).then((value) => callback.call());
+    documentReference.update(list.toJson()).then((value) => callback != null ? callback.call() : null);
   }
 
   void addItemToList(ShoppingList list, Item item, {Function callback}) {

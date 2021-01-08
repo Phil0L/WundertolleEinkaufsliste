@@ -81,7 +81,12 @@ class DialogContent extends StatelessWidget {
             fillColor: Colors.grey[500],
           ),
         ),
-        Quantity(),
+        Quantity(
+          startSelected: false,
+          text: "Mit Menge",
+          unit: "Einheit",
+          startValue: 1,
+        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -106,6 +111,9 @@ class DialogContent extends StatelessWidget {
 bool confirmed() {
   Item item = readItem();
   if (item.name == '') return false;
+  AddItemDialog.nameController.clear();
+  AddItemDialog.descriptionController.clear();
+  AddItemDialog.quantityNameController.clear();
   addItem(item);
   return true;
 }
@@ -131,21 +139,36 @@ Item readItem() {
 }
 
 void addItem(Item item) {
-  //TODO: kinda edgy
   int listIndex = MainPageState.tabController.index;
   ShoppingList list = Data.lists[listIndex];
   FirestoreSaver().addItemToList(list, item);
 }
 
 class Quantity extends StatefulWidget {
+  final bool startSelected;
+  final String text;
+  final String unit;
+  final int startValue;
+
+  Quantity(
+      {this.startSelected: false,
+      this.text: "",
+      this.unit: "",
+      this.startValue: 1});
+
   @override
   State<StatefulWidget> createState() {
-    return QuantityState();
+    return QuantityState(startSelected, text, unit, startValue);
   }
 }
 
 class QuantityState extends State<Quantity> {
-  bool active = false;
+  bool active;
+  final String text;
+  final String unit;
+  final int startValue;
+
+  QuantityState(this.active, this.text, this.unit, this.startValue);
 
   void activateQuantity() {
     setState(() {
@@ -200,6 +223,7 @@ class QuantityState extends State<Quantity> {
           SizedBox(
             width: 120,
             child: SpinBox(
+
               direction: Axis.horizontal,
               min: 0,
               max: 1000,

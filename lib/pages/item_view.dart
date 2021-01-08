@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wundertolle_einkaufsliste/objects/data.dart';
 import 'package:wundertolle_einkaufsliste/objects/database/firestore.dart';
 import 'package:wundertolle_einkaufsliste/objects/item.dart';
 
@@ -30,12 +31,11 @@ class ListItemWidgetState extends State<ListItemWidget> {
     if (mounted) setState(() {});
   }
 
+  //TODO: setState questionable
   void onChecked(bool isNowChecked) {
-    setState(() {
-      Item ic = item.clone();
-      ic.checked = isNowChecked;
-      FirestoreSaver().updateItemInList(item.parent, ic);
-    });
+    Item ic = item.clone();
+    ic.checked = isNowChecked;
+    FirestoreSaver().updateItemInList(Data.getListByID(ic.parent.id), ic);
   }
 
   @override

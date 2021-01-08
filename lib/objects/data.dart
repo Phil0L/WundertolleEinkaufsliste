@@ -1,14 +1,11 @@
-
+import 'package:wundertolle_einkaufsliste/objects/item.dart';
+import 'package:wundertolle_einkaufsliste/objects/list.dart';
 import 'package:wundertolle_einkaufsliste/objects/user.dart';
 import 'package:wundertolle_einkaufsliste/pages/home.dart';
-
-import 'item.dart';
-import 'list.dart';
 
 class Data {
   static List<ShoppingList> lists = <ShoppingList>[];
 
-  @deprecated //expensive runtime! try not to use!
   static ShoppingList getListByID(String id) {
     for (ShoppingList list in lists) {
       if (list.id == id) return list;
@@ -21,6 +18,7 @@ class Data {
   }
 
   static void onListAdded(ShoppingList list) {
+    if (list == null) return;
     if (!list.user.contains(User.me)) return;
     lists.add(list);
     MainPage.state.reloadTabList();
@@ -28,14 +26,15 @@ class Data {
   }
 
   static void onListRemoved(ShoppingList list) {
-    if (!list.user.contains(User.me)) return;
+    if (list == null) return;
     lists.remove(list);
     MainPage.state.reloadTabList();
     list.onDelete();
   }
 
   static void onListUpdate(ShoppingList newList, ShoppingList oldList) {
-    if (!newList.user.contains(User.me)) return;
+    if (newList == null || oldList == null) return;
+    if (!newList.user.contains(User.me)) return onListRemoved(newList);
     if (oldList.toJsonString() == newList.toJsonString()) return;
     List<Item> existingItems = List.from(oldList.items).cast<Item>().toList();
     newList.items.forEach((item) {
@@ -52,6 +51,7 @@ class Data {
     if (existingItems.isNotEmpty)
       // Item has died!
       existingItems.forEach((element) => oldList.onItemRemoved(element));
+    MainPage.state.reloadTab(oldList);
   }
 }
 

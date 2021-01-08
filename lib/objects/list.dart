@@ -107,24 +107,36 @@ class ShoppingList implements Savable<ShoppingList>, ShoppingListUpdater {
 
   @override
   ShoppingList fromJson(Map<String, dynamic> json) {
-    String name = json['name'];
-    String id = json['id'];
-    int iconCodePoint = json['iconCodePoint'];
-    var items = json['items'];
-    List<Item> itemsList = <Item>[];
-    items.values.forEach((itemJson) {
-      itemsList.add(Item().fromJson(itemJson));
-    });
-    var users = json['users'];
-    List<User> usersList = <User>[];
-    users.values.forEach((userJson) {
-      usersList.add(User().fromJson(userJson));
-    });
-    ShoppingList out = ShoppingListBuilder(
-            name: name, id: id, icon: iconCodePoint, items: itemsList, users: usersList)
-        .build();
-    itemsList.forEach((item) => item.parent = out);
-    return out;
+    ShoppingListBuilder builder;
+    try {
+      String name = json['name'];
+      builder = ShoppingListBuilder(name: name, icon: null);
+      String id = json['id'];
+      builder.id = id;
+      int iconCodePoint = json['iconCodePoint'];
+      builder.icon = iconCodePoint;
+      var items = json['items'];
+      List<Item> itemsList = <Item>[];
+      items.values.forEach((itemJson) {
+        itemsList.add(Item().fromJson(itemJson));
+      });
+      builder.addItems(itemsList);
+      var users = json['users'];
+      List<User> usersList = <User>[];
+      users.values.forEach((userJson) {
+        usersList.add(User().fromJson(userJson));
+      });
+      builder.addUsers(usersList);
+      ShoppingList out = builder.build();
+      itemsList.forEach((item) => item.parent = out);
+      return out;
+    }catch (e) {
+      print(e);
+      if (builder == null)
+        builder = ShoppingListBuilder(name: '');
+      builder.name = 'Parsing error';
+      return builder.build();
+    }
   }
 
   @override
@@ -142,7 +154,7 @@ class ShoppingList implements Savable<ShoppingList>, ShoppingListUpdater {
       i += 1;
     });
     Map<String, dynamic> out = {'name': _name, 'id': _id};
-    if (_icon != null) out['iconCodePoint'] = _id;
+    if (_icon != null) out['iconCodePoint'] = _icon;
     out['items'] = items;
     out['users'] = users;
     return out;
@@ -162,7 +174,7 @@ class ShoppingListBuilder {
   List<User> _users;
 
   ShoppingListBuilder(
-      {@required String name, @required int icon, id, items, users}) {
+      {@required String name, int icon, id, items, users}) {
     _name = name;
     _icon = icon;
     if (id == null)
@@ -244,20 +256,30 @@ class ListModifier {
   }
 
   void removeItem(Item item) {
-    List<Item> toRemove = <Item>[];
-    for (Item i in list._items) {
-      if (i.id == item.id) {
-        toRemove.add(item);
-      }
-    }
-    toRemove.forEach((element) => list._items.remove(element));
+    // List<Item> toRemove = <Item>[];
+    // for (Item i in list._items) {
+    //   if (i.id == item.id) {
+    //     toRemove.add(item);
+    //   }
+    // }
+    // toRemove.forEach((element) => list._items.remove(element));
+    list._items.removeWhere((element) => element == item);
   }
 
   void updateItem(Item newItem) {
     int x = 0;
-    for (Item i in list._items) {
-      if (i.id == newItem.id) list._items[x] = newItem;
+    for (Item item in list.items) {
+      if (item == newItem)
+        list._items[x] = newItem;
       x++;
     }
+  }
+
+  void addUser(User user){
+    list._user.add(user);
+  }
+
+  void removeUser(User user){
+    list._user.removeWhere((element) => element == user);
   }
 }
